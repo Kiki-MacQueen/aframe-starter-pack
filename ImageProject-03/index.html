@@ -1,15 +1,696 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <script src="https://aframe.io/releases/1.7.1/aframe.min.js"> </script>
-  </head>
-  <body>
-    <a-scene>
-      <a-box position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9"></a-box>
-      <a-sphere position="0 1.25 -5" radius="1.25" color="#EF2D5E"></a-sphere>
-      <a-cylinder position="1 0.75 -3" radius="0.5" height="1.5" color="#FFC65D"></a-cylinder>
-      <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
-      <a-sky color="#ECECEC"></a-sky>
-    </a-scene>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Abandoned Observatory – WebVR World</title>
+
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+  <!-- A-Frame Extras (for animation-mixer on GLB models) -->
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ── Info overlay ──────────────────────────────────────── */
+    #info-panel {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 18px 24px;
+      background: linear-gradient(to bottom, rgba(3,6,20,0.85) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    #info-panel .title-block { pointer-events: none; }
+
+    #info-panel h1 {
+      font-family: 'Georgia', serif;
+      font-size: 1.4rem;
+      font-weight: normal;
+      letter-spacing: 0.08em;
+      color: #d4c8a8;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.8);
+    }
+
+    #info-panel p {
+      font-family: 'Georgia', serif;
+      font-size: 0.8rem;
+      color: #9a8e72;
+      margin-top: 4px;
+      letter-spacing: 0.04em;
+      max-width: 400px;
+      line-height: 1.5;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+    }
+
+    #enter-btn {
+      pointer-events: all;
+      margin-top: 4px;
+      padding: 7px 18px;
+      background: transparent;
+      border: 1px solid rgba(212,200,168,0.5);
+      color: #d4c8a8;
+      font-family: 'Georgia', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    #enter-btn:hover {
+      background: rgba(212,200,168,0.12);
+      border-color: rgba(212,200,168,0.9);
+    }
+
+    /* ── Crosshair (gaze cursor) ───────────────────────────── */
+    #crosshair {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 9998;
+    }
+    #crosshair::before, #crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(255,255,255,0.6);
+    }
+    #crosshair::before { width: 1px; height: 14px; top: -7px; left: 0; }
+    #crosshair::after  { width: 14px; height: 1px; left: -7px; top: 0; }
+
+    /* ── Toast notification ────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 32px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10,8,28,0.82);
+      color: #d4c8a8;
+      font-family: 'Georgia', serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      padding: 10px 22px;
+      border: 1px solid rgba(212,200,168,0.3);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s;
+      z-index: 9997;
+    }
+    #toast.visible { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- ── UI overlay ───────────────────────────────────────────── -->
+<div id="info-panel">
+  <div class="title-block">
+    <h1>The Abandoned Observatory</h1>
+    <p>
+      A forgotten hilltop observatory reclaimed by time — where a crumbling telescope
+      faces a sky full of stars, an old armillary sphere still spins slowly in the wind,
+      and a lone campfire flickers outside the dome. Wander. Look up. Remember.
+    </p>
+  </div>
+  <button id="enter-btn" onclick="enterVR()">Enter VR ↗</button>
+</div>
+
+<div id="crosshair"></div>
+<div id="toast" id="toast"></div>
+
+<!-- ── A-Frame Scene ─────────────────────────────────────────── -->
+<a-scene
+  id="main-scene"
+  background="color: #080518"
+  fog="type: exponential; color: #090722; density: 0.012"
+  vr-mode-ui="enabled: true"
+  renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true"
+>
+
+  <!-- ════════════════════════════════════════
+       ASSETS
+  ════════════════════════════════════════ -->
+  <a-assets timeout="10000">
+    <!-- Equirectangular sky texture (deep-sky starfield) -->
+    <!-- We generate a procedural sky inside A-Frame since no file upload is available -->
+  </a-assets>
+
+
+  <!-- ════════════════════════════════════════
+       SKY  — procedural deep-space gradient
+       (Equirectangular-style, hand-crafted)
+  ════════════════════════════════════════ -->
+
+  <!-- Base deep-blue-black sky sphere -->
+  <a-sky color="#04020f"></a-sky>
+
+  <!-- Milky-way band: large blurred cylinder of particles -->
+  <a-entity id="milkyway">
+    <!-- Stars distributed via JS (see script below) -->
+  </a-entity>
+
+  <!-- Atmospheric nebula glow (large translucent spheres) -->
+  <a-sphere position="0 0 0" radius="480" side="back"
+            material="color:#0d0630; opacity:0.55; transparent:true; shader:flat">
+  </a-sphere>
+  <a-sphere position="-60 80 -200" radius="160"
+            material="color:#1a0545; opacity:0.18; transparent:true; shader:flat">
+  </a-sphere>
+  <a-sphere position="120 40 -300" radius="200"
+            material="color:#05122e; opacity:0.25; transparent:true; shader:flat">
+  </a-sphere>
+
+
+  <!-- ════════════════════════════════════════
+       TERRAIN  — grassy hill
+  ════════════════════════════════════════ -->
+
+  <!-- Main hill (flattened ellipsoid acting as ground) -->
+  <a-sphere id="hill"
+    position="0 -14 0"
+    radius="20"
+    scale="1.9 0.52 1.9"
+    material="color:#1a2e14; roughness:1; metalness:0; shader:standard">
+  </a-sphere>
+
+  <!-- Ground plane extending outward -->
+  <a-plane
+    position="0 -8.7 0"
+    rotation="-90 0 0"
+    width="200" height="200"
+    material="color:#111e0d; roughness:1; metalness:0; shader:standard">
+  </a-plane>
+
+  <!-- Distant foggy hills -->
+  <a-sphere position="-60 -18 -80" radius="30" scale="2.5 0.4 1.5"
+    material="color:#141e10; opacity:0.7; transparent:true; shader:standard"></a-sphere>
+  <a-sphere position="70 -19 -90" radius="28" scale="2 0.38 1.6"
+    material="color:#10190d; opacity:0.6; transparent:true; shader:standard"></a-sphere>
+
+
+  <!-- ════════════════════════════════════════
+       OBSERVATORY DOME & WALLS
+  ════════════════════════════════════════ -->
+
+  <!-- Stone base cylinder -->
+  <a-cylinder id="obs-base"
+    position="0 -7.2 -4"
+    radius="3.8" height="2.5"
+    material="color:#3a3228; roughness:0.92; metalness:0.05; shader:standard"
+    segments-height="1" segments-radial="24">
+  </a-cylinder>
+
+  <!-- Dome (half-sphere) -->
+  <a-sphere id="obs-dome"
+    position="0 -5.55 -4"
+    radius="3.8"
+    phi-start="0" phi-length="180"
+    theta-start="0" theta-length="360"
+    material="color:#2c2820; roughness:0.85; metalness:0.15; shader:standard"
+    segments-height="12" segments-width="24">
+  </a-sphere>
+
+  <!-- Dome slit (dark gap) -->
+  <a-box position="0 -4.8 -0.25"
+    width="0.8" height="3.5" depth="0.4"
+    rotation="0 0 0"
+    material="color:#07060f; shader:flat">
+  </a-box>
+
+  <!-- Small doorway arch (box cutout simulation with darker box) -->
+  <a-box position="0 -6.9 -0.2"
+    width="1.1" height="1.6" depth="0.5"
+    material="color:#0a0908; shader:flat">
+  </a-box>
+
+  <!-- Doorway lintel stones -->
+  <a-box position="0 -6.05 -0.2"
+    width="1.3" height="0.18" depth="0.52"
+    material="color:#4a4038; roughness:1; shader:standard">
+  </a-box>
+
+  <!-- Stone steps leading to door -->
+  <a-box position="0 -7.5 1.0"  width="1.6" height="0.18" depth="0.7"
+    material="color:#3d3530; roughness:1; shader:standard"></a-box>
+  <a-box position="0 -7.68 1.7" width="1.8" height="0.18" depth="0.7"
+    material="color:#363028; roughness:1; shader:standard"></a-box>
+
+  <!-- Crumbled stone chunks around base -->
+  <a-box position="3.2 -7.8 -3.5" width="0.7" height="0.4" depth="0.5"
+    rotation="0 30 12"
+    material="color:#3a3228; roughness:1; shader:standard"></a-box>
+  <a-box position="-3.5 -7.9 -4.2" width="0.5" height="0.3" depth="0.4"
+    rotation="0 -20 -8"
+    material="color:#3a3228; roughness:1; shader:standard"></a-box>
+  <a-box position="4.0 -7.85 -4.8" width="0.4" height="0.25" depth="0.6"
+    rotation="0 55 5"
+    material="color:#322c22; roughness:1; shader:standard"></a-box>
+
+
+  <!-- ════════════════════════════════════════
+       3D OBJECT 1: TELESCOPE (built from primitives)
+       — inside / protruding from dome slit
+  ════════════════════════════════════════ -->
+  <a-entity id="telescope" position="0 -5.1 -4">
+
+    <!-- Main tube -->
+    <a-cylinder
+      radius="0.22" height="2.8"
+      rotation="30 0 0"
+      position="0 0.3 0.6"
+      material="color:#7a6e5a; roughness:0.6; metalness:0.4; shader:standard">
+    </a-cylinder>
+
+    <!-- Eyepiece end cap -->
+    <a-cylinder
+      radius="0.26" height="0.14"
+      rotation="30 0 0"
+      position="0 -0.9 1.7"
+      material="color:#5a5040; roughness:0.5; metalness:0.5; shader:standard">
+    </a-cylinder>
+
+    <!-- Objective end (lens end) -->
+    <a-cylinder
+      radius="0.30" height="0.12"
+      rotation="30 0 0"
+      position="0 1.4 -0.6"
+      material="color:#1a1a2e; roughness:0.3; metalness:0.7; shader:standard">
+    </a-cylinder>
+
+    <!-- Mount pillar -->
+    <a-cylinder
+      radius="0.12" height="1.2"
+      position="0 -0.8 0"
+      material="color:#5a5040; roughness:0.7; metalness:0.3; shader:standard">
+    </a-cylinder>
+
+    <!-- Equatorial mount base disc -->
+    <a-cylinder
+      radius="0.4" height="0.1"
+      position="0 -1.35 0"
+      material="color:#4a4035; roughness:0.8; metalness:0.2; shader:standard">
+    </a-cylinder>
+
+    <!-- Declination axis arm -->
+    <a-box
+      width="0.8" height="0.1" depth="0.1"
+      position="0 -0.3 0"
+      rotation="30 0 0"
+      material="color:#6a6050; roughness:0.6; metalness:0.4; shader:standard">
+    </a-box>
+
+    <!-- Slow rotation animation (as if tracking a star) -->
+    <a-animation attribute="rotation"
+      from="30 0 0" to="30 360 0"
+      dur="120000" repeat="indefinite" easing="linear">
+    </a-animation>
+  </a-entity>
+
+
+  <!-- ════════════════════════════════════════
+       3D OBJECT 2: ARMILLARY SPHERE
+       (interlocking rings — built from torus primitives)
+  ════════════════════════════════════════ -->
+  <a-entity id="armillary" position="4.5 -7.0 -2.5">
+
+    <!-- Pedestal -->
+    <a-cylinder radius="0.15" height="0.9"
+      material="color:#8a7a60; roughness:0.6; metalness:0.5; shader:standard">
+    </a-cylinder>
+    <a-cylinder radius="0.35" height="0.1" position="0 -0.4 0"
+      material="color:#8a7a60; roughness:0.6; metalness:0.5; shader:standard">
+    </a-cylinder>
+    <a-cylinder radius="0.22" height="0.08" position="0 0.4 0"
+      material="color:#8a7a60; roughness:0.7; metalness:0.4; shader:standard">
+    </a-cylinder>
+
+    <!-- Outer meridian ring (vertical) -->
+    <a-torus radius="0.7" radius-tubular="0.025" rotation="0 0 0"
+      material="color:#b8a070; roughness:0.4; metalness:0.7; shader:standard"
+      segments-tubular="36" segments-radial="18">
+    </a-torus>
+
+    <!-- Equatorial ring (horizontal) -->
+    <a-torus radius="0.68" radius-tubular="0.022" rotation="90 0 0"
+      material="color:#c0aa78; roughness:0.4; metalness:0.7; shader:standard"
+      segments-tubular="36" segments-radial="18">
+    </a-torus>
+
+    <!-- Ecliptic ring (tilted ~23°) -->
+    <a-torus radius="0.66" radius-tubular="0.022" rotation="90 0 23"
+      material="color:#a89060; roughness:0.4; metalness:0.7; shader:standard"
+      segments-tubular="36" segments-radial="18">
+    </a-torus>
+
+    <!-- Polar axis ring (tilted) -->
+    <a-torus radius="0.64" radius-tubular="0.018" rotation="0 30 75"
+      material="color:#b09868; roughness:0.45; metalness:0.65; shader:standard"
+      segments-tubular="36" segments-radial="18">
+    </a-torus>
+
+    <!-- Inner colure ring -->
+    <a-torus radius="0.60" radius-tubular="0.018" rotation="0 90 0"
+      material="color:#c8b480; roughness:0.35; metalness:0.75; shader:standard"
+      segments-tubular="36" segments-radial="18">
+    </a-torus>
+
+    <!-- Central Earth-like sphere -->
+    <a-sphere radius="0.14"
+      material="color:#2a4a6e; roughness:0.5; metalness:0.3; shader:standard">
+    </a-sphere>
+
+    <!-- Slow spin animation -->
+    <a-animation attribute="rotation"
+      from="0 0 0" to="0 360 0"
+      dur="25000" repeat="indefinite" easing="linear">
+    </a-animation>
+  </a-entity>
+
+
+  <!-- ════════════════════════════════════════
+       3D OBJECT 3: CAMPFIRE
+  ════════════════════════════════════════ -->
+  <a-entity id="campfire" position="-3.5 -7.75 1.5">
+
+    <!-- Log ring (two crossing logs) -->
+    <a-cylinder radius="0.06" height="0.8" rotation="0 0 90" position="0 0 0"
+      material="color:#3d2010; roughness:1; shader:standard"></a-cylinder>
+    <a-cylinder radius="0.06" height="0.8" rotation="0 45 90" position="0 0 0"
+      material="color:#3d2010; roughness:1; shader:standard"></a-cylinder>
+    <a-cylinder radius="0.06" height="0.8" rotation="0 -45 90" position="0 0 0"
+      material="color:#3d2010; roughness:1; shader:standard"></a-cylinder>
+
+    <!-- Coal base -->
+    <a-sphere radius="0.15" scale="1 0.4 1" position="0 0.05 0"
+      material="color:#1a0a05; roughness:1; shader:flat"></a-sphere>
+
+    <!-- Fire cones (animated) -->
+    <a-cone id="flame-a"
+      radius-bottom="0.14" radius-top="0.01" height="0.42"
+      position="0 0.28 0"
+      material="color:#ff6820; opacity:0.9; transparent:true; shader:flat; side:double">
+      <a-animation attribute="scale"
+        from="1 1 1" to="0.85 1.18 0.85"
+        dur="600" direction="alternate" repeat="indefinite" easing="easeInOutSine">
+      </a-animation>
+      <a-animation attribute="rotation"
+        from="0 0 0" to="0 360 0"
+        dur="4000" repeat="indefinite" easing="linear">
+      </a-animation>
+    </a-cone>
+
+    <a-cone
+      radius-bottom="0.10" radius-top="0.01" height="0.32"
+      position="0.04 0.26 0.02"
+      material="color:#ffb020; opacity:0.8; transparent:true; shader:flat; side:double">
+      <a-animation attribute="scale"
+        from="1 1 1" to="0.9 1.22 0.9"
+        dur="450" direction="alternate" repeat="indefinite" easing="easeInOutSine">
+      </a-animation>
+    </a-cone>
+
+    <a-cone
+      radius-bottom="0.07" radius-top="0.01" height="0.24"
+      position="-0.03 0.24 0.01"
+      material="color:#ffffff; opacity:0.55; transparent:true; shader:flat; side:double">
+      <a-animation attribute="scale"
+        from="1 1 1" to="0.8 1.3 0.8"
+        dur="380" direction="alternate" repeat="indefinite" easing="easeInOutSine">
+      </a-animation>
+    </a-cone>
+
+    <!-- Glow point light -->
+    <a-light type="point" color="#ff8030" intensity="1.4" distance="8" decay="2"
+      position="0 0.5 0">
+      <a-animation attribute="intensity"
+        from="1.4" to="0.9"
+        dur="700" direction="alternate" repeat="indefinite" easing="easeInOutSine">
+      </a-animation>
+    </a-light>
+  </a-entity>
+
+
+  <!-- ════════════════════════════════════════
+       3D OBJECT 4: STONE BENCH + OPEN BOOK
+  ════════════════════════════════════════ -->
+  <a-entity position="-4.2 -7.7 -1.0" rotation="0 40 0">
+
+    <!-- Bench seat -->
+    <a-box width="1.4" height="0.12" depth="0.45"
+      material="color:#3a3228; roughness:1; shader:standard"></a-box>
+    <!-- Bench legs -->
+    <a-box width="0.15" height="0.45" depth="0.42" position="-0.55 -0.28 0"
+      material="color:#322c22; roughness:1; shader:standard"></a-box>
+    <a-box width="0.15" height="0.45" depth="0.42" position="0.55 -0.28 0"
+      material="color:#322c22; roughness:1; shader:standard"></a-box>
+
+    <!-- Open book on bench -->
+    <a-entity position="0 0.1 0" rotation="-5 0 0">
+      <a-box width="0.25" height="0.02" depth="0.32" position="-0.13 0 0"
+        rotation="0 0 8"
+        material="color:#e8dfc0; roughness:0.9; shader:standard"></a-box>
+      <a-box width="0.25" height="0.02" depth="0.32" position="0.13 0 0"
+        rotation="0 0 -8"
+        material="color:#e8dfc0; roughness:0.9; shader:standard"></a-box>
+      <!-- Book spine -->
+      <a-box width="0.05" height="0.025" depth="0.32"
+        material="color:#6a4a28; roughness:0.8; shader:standard"></a-box>
+      <!-- Text lines (decorative) -->
+      <a-box width="0.18" height="0.003" depth="0.018" position="-0.12 0.012 -0.06"
+        material="color:#b8a880; shader:flat"></a-box>
+      <a-box width="0.18" height="0.003" depth="0.018" position="-0.12 0.012 -0.02"
+        material="color:#b8a880; shader:flat"></a-box>
+      <a-box width="0.14" height="0.003" depth="0.018" position="-0.14 0.012 0.02"
+        material="color:#b8a880; shader:flat"></a-box>
+      <a-box width="0.18" height="0.003" depth="0.018" position="-0.12 0.012 0.06"
+        material="color:#b8a880; shader:flat"></a-box>
+    </a-entity>
+  </a-entity>
+
+
+  <!-- ════════════════════════════════════════
+       3D OBJECT 5: CRUMBLING WALL RUINS
+  ════════════════════════════════════════ -->
+  <a-entity position="6.5 -7.6 -6" rotation="0 -20 0">
+    <!-- Main wall section -->
+    <a-box width="3.5" height="1.4" depth="0.4"
+      material="color:#3a3028; roughness:1; shader:standard"></a-box>
+    <!-- Broken top -->
+    <a-box width="1.2" height="0.6" depth="0.42" position="-1.0 1.0 0"
+      material="color:#3a3028; roughness:1; shader:standard"></a-box>
+    <a-box width="0.6" height="0.4" depth="0.42" position="0.5 0.9 0"
+      rotation="0 0 5"
+      material="color:#3a3028; roughness:1; shader:standard"></a-box>
+    <!-- Fallen stones -->
+    <a-box width="0.5" height="0.25" depth="0.38" position="1.5 -0.85 0.3"
+      rotation="0 15 12"
+      material="color:#302822; roughness:1; shader:standard"></a-box>
+    <a-box width="0.35" height="0.2" depth="0.3" position="1.8 -0.9 -0.2"
+      rotation="0 -30 -8"
+      material="color:#302822; roughness:1; shader:standard"></a-box>
+    <!-- Ivy / moss strips (dark green planes) -->
+    <a-plane width="0.8" height="0.5" position="0.3 0.2 0.21" rotation="0 0 10"
+      material="color:#1a3a10; opacity:0.6; transparent:true; shader:flat; side:double">
+    </a-plane>
+    <a-plane width="0.4" height="0.35" position="-0.9 0.5 0.21" rotation="0 0 -5"
+      material="color:#1a3a10; opacity:0.5; transparent:true; shader:flat; side:double">
+    </a-plane>
+  </a-entity>
+
+
+  <!-- ════════════════════════════════════════
+       VEGETATION
+  ════════════════════════════════════════ -->
+
+  <!-- Dead/bare tree (left) -->
+  <a-entity position="-7.5 -7.2 -3">
+    <a-cylinder radius="0.12" height="3.2"
+      material="color:#2a2018; roughness:1; shader:standard"></a-cylinder>
+    <a-cylinder radius="0.06" height="1.5" rotation="0 0 40" position="0.4 0.9 0"
+      material="color:#2a2018; roughness:1; shader:standard"></a-cylinder>
+    <a-cylinder radius="0.05" height="1.2" rotation="0 60 -35" position="-0.35 0.6 0"
+      material="color:#2a2018; roughness:1; shader:standard"></a-cylinder>
+    <a-cylinder radius="0.04" height="0.9" rotation="0 -30 45" position="0 1.4 0"
+      material="color:#2a2018; roughness:1; shader:standard"></a-cylinder>
+  </a-entity>
+
+  <!-- Shrub clusters -->
+  <a-sphere position="3.5 -7.9 2.5" radius="0.55" scale="1.2 0.7 1.0"
+    material="color:#1f3515; roughness:1; shader:standard"></a-sphere>
+  <a-sphere position="3.9 -7.95 2.2" radius="0.45" scale="1.0 0.65 0.9"
+    material="color:#1a2e12; roughness:1; shader:standard"></a-sphere>
+  <a-sphere position="-5.5 -7.9 -0.5" radius="0.5" scale="1.1 0.7 1.0"
+    material="color:#1e3214; roughness:1; shader:standard"></a-sphere>
+  <a-sphere position="-5.0 -7.95 0.1" radius="0.4" scale="0.9 0.6 0.8"
+    material="color:#182c10; roughness:1; shader:standard"></a-sphere>
+
+
+  <!-- ════════════════════════════════════════
+       LIGHTING
+  ════════════════════════════════════════ -->
+
+  <!-- Cold moonlight (directional) -->
+  <a-light type="directional"
+    color="#8899cc" intensity="0.35"
+    position="-5 12 -8">
+  </a-light>
+
+  <!-- Ambient fill (very dim, cool) -->
+  <a-light type="ambient" color="#0a0a1a" intensity="0.9"></a-light>
+
+  <!-- Soft blue-purple fill on dome -->
+  <a-light type="point" color="#4060a0" intensity="0.5" distance="12" decay="2"
+    position="0 2 -4">
+  </a-light>
+
+  <!-- Campfire light handled inside the campfire entity above -->
+
+
+  <!-- ════════════════════════════════════════
+       INTERACTIVE OBJECTS (gaze-based)
+       Clicking / gazing at the armillary or telescope
+       shows a toast notification
+  ════════════════════════════════════════ -->
+
+  <!-- Invisible clickable proxy for armillary sphere -->
+  <a-sphere position="4.5 -7.0 -2.5" radius="0.85"
+    material="opacity:0; transparent:true; shader:flat"
+    class="clickable"
+    data-msg="The armillary sphere — once used to chart the heavens."
+    event-set__mouseenter="_event: mouseenter; _target: #armillary; animation__spin.dur: 8000"
+    cursor-listener>
+  </a-sphere>
+
+  <!-- Invisible clickable proxy for telescope -->
+  <a-sphere position="0 -5.1 -4" radius="1.2"
+    material="opacity:0; transparent:true; shader:flat"
+    class="clickable"
+    data-msg="The great refractor — last pointed at Comet Rendell, 1923."
+    cursor-listener>
+  </a-sphere>
+
+  <!-- Invisible clickable proxy for campfire -->
+  <a-sphere position="-3.5 -7.75 1.5" radius="0.8"
+    material="opacity:0; transparent:true; shader:flat"
+    class="clickable"
+    data-msg="The fire still burns — someone was just here."
+    cursor-listener>
+  </a-sphere>
+
+
+  <!-- ════════════════════════════════════════
+       CURSOR / CAMERA RIG
+  ════════════════════════════════════════ -->
+  <a-entity id="rig" position="0 -6.2 6.5">
+    <a-camera
+      wasd-controls="acceleration: 18"
+      look-controls="pointerLockEnabled: false"
+      near="0.1" far="600">
+
+      <!-- Gaze cursor (for VR / non-pointer environments) -->
+      <a-cursor
+        fuse="false"
+        raycaster="objects: .clickable"
+        material="color:#ffffff; opacity:0.6; shader:flat"
+        geometry="primitive: ring; radiusInner: 0.012; radiusOuter: 0.018">
+      </a-cursor>
+    </a-camera>
+  </a-entity>
+
+</a-scene>
+
+
+<!-- ════════════════════════════════════════
+     JAVASCRIPT — Stars, Interactions, Controls
+════════════════════════════════════════ -->
+<script>
+
+/* ── Generate procedural star field ──────────────────────── */
+AFRAME.registerComponent('starfield', {
+  init: function () {
+    const scene = this.el;
+    const count = 900;
+    for (let i = 0; i < count; i++) {
+      const star = document.createElement('a-sphere');
+      const theta = Math.random() * Math.PI * 2;
+      const phi   = Math.acos(2 * Math.random() - 1);
+      const r     = 480 + Math.random() * 5;
+      const x = r * Math.sin(phi) * Math.cos(theta);
+      const y = r * Math.sin(phi) * Math.sin(theta);
+      const z = r * Math.cos(phi);
+
+      const size = 0.18 + Math.random() * 0.55;
+      const bright = 0.55 + Math.random() * 0.45;
+      const hue = Math.random() < 0.15 ? '#aac0ff' :
+                  Math.random() < 0.15 ? '#ffdda8' : '#ffffff';
+
+      star.setAttribute('position', `${x} ${y} ${z}`);
+      star.setAttribute('radius', size);
+      star.setAttribute('material', `color:${hue}; opacity:${bright}; shader:flat`);
+      star.setAttribute('segments-width', '4');
+      star.setAttribute('segments-height', '4');
+      scene.appendChild(star);
+    }
+  }
+});
+
+/* Apply starfield to scene */
+document.addEventListener('DOMContentLoaded', () => {
+  const scene = document.querySelector('a-scene');
+  scene.setAttribute('starfield', '');
+});
+
+
+/* ── Toast notification helper ─────────────────────────── */
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('visible');
+  clearTimeout(el._timeout);
+  el._timeout = setTimeout(() => el.classList.remove('visible'), 3200);
+}
+
+
+/* ── Click/gaze interaction on objects ─────────────────── */
+AFRAME.registerComponent('cursor-listener', {
+  init: function () {
+    const el   = this.el;
+    const msg  = el.getAttribute('data-msg') || '';
+    el.addEventListener('click', () => { if (msg) showToast(msg); });
+    el.addEventListener('mouseenter', () => { document.body.style.cursor = 'pointer'; });
+    el.addEventListener('mouseleave', () => { document.body.style.cursor = ''; });
+  }
+});
+
+
+/* ── VR enter button ───────────────────────────────────── */
+function enterVR() {
+  const scene = document.querySelector('a-scene');
+  if (scene.is('vr-mode')) {
+    scene.exitVR();
+  } else {
+    scene.enterVR();
+  }
+}
+
+
+/* ── Keyboard hint on first move ──────────────────────── */
+let hinted = false;
+document.addEventListener('keydown', (e) => {
+  if (!hinted && ['w','a','s','d','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+    hinted = true;
+    showToast('Use WASD to walk · Drag to look · Click objects to examine');
+  }
+});
+
+/* Initial welcome toast */
+window.addEventListener('load', () => {
+  setTimeout(() => showToast('Look around — click objects to examine them'), 1800);
+});
+
+</script>
+</body>
 </html>
