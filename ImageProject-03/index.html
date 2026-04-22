@@ -7,165 +7,130 @@
   </head>
   <body>
 
-    <a-scene>
+    <a-scene fog="type: exponential; color: #0a0520; density: 0.015">
 
       <a-sky color="#0a0520"></a-sky>
+
+      <a-sphere position="0 0 0" radius="400" side="back"
+        material="color:#1a0545; opacity:0.4; transparent:true; shader:flat">
+      </a-sphere>
+
+      <a-sphere
+        position="-18 22 -60"
+        radius="3.5"
+        color="#e8e0c8"
+        material="shader:flat; opacity:1">
+      </a-sphere>
+      <a-sphere
+        position="-18 22 -60"
+        radius="4.5"
+        color="#c8c0a0"
+        material="shader:flat; opacity:0.12; transparent:true">
+      </a-sphere>
 
       <a-plane
         position="0 0 -4"
         rotation="-90 0 0"
-        width="40"
-        height="40"
-        color="#1a2e14">
+        width="80"
+        height="80"
+        color="#141e0d">
       </a-plane>
 
-
-      <a-cylinder
-        position="0 1.8 -4"
-        rotation="30 0 0"
-        radius="0.15"
-        height="2"
-        color="#8a7a60">
-      </a-cylinder>
-
-      <a-cylinder
-        position="0 0.8 -4"
-        radius="0.08"
-        height="1.2"
-        color="#6a5a40">
-      </a-cylinder>
-
-      <a-cylinder
-        position="0 0.2 -4"
-        radius="0.3"
-        height="0.08"
-        color="#5a4a30">
-      </a-cylinder>
-
-  
-
-      <a-torus
-        position="3 1.2 -3"
-        rotation="0 0 0"
-        radius="0.6"
-        radius-tubular="0.02"
-        color="#c0a060">
-
-        <a-animation
-          attribute="rotation"
-          from="0 0 0"
-          to="0 360 0"
-          dur="20000"
-          repeat="indefinite"
-          easing="linear">
-        </a-animation>
-      </a-torus>
-
-      <a-torus
-        position="3 1.2 -3"
-        rotation="90 0 0"
-        radius="0.58"
-        radius-tubular="0.02"
-        color="#b09050">
-      </a-torus>
-
-      <a-torus
-        position="3 1.2 -3"
-        rotation="90 0 45"
-        radius="0.56"
-        radius-tubular="0.02"
-        color="#a08040">
-      </a-torus>
-
-      <a-sphere
-        position="3 1.2 -3"
-        radius="0.12"
-        color="#2a4a6e">
+      <a-sphere position="0 -8 -20" radius="14" scale="2 0.5 1.5"
+        color="#111a0b" material="shader:standard; roughness:1">
       </a-sphere>
-
-      <a-cylinder
-        position="3 0.5 -3"
-        radius="0.06"
-        height="0.8"
-        color="#8a7a60">
-      </a-cylinder>
-
-      <a-cylinder
-        position="0 0.6 -8"
-        radius="3"
-        height="1.2"
-        color="#3a3228">
-      </a-cylinder>
-
-      <a-sphere
-        position="0 1.8 -8"
-        radius="3"
-        phi-start="0"
-        phi-length="180"
-        color="#2c2820">
+      <a-sphere position="-25 -9 -30" radius="12" scale="1.8 0.45 1.2"
+        color="#0f180a" material="shader:standard; roughness:1">
       </a-sphere>
-
-    
-      <a-cylinder
-        position="-3 0.05 -2"
-        rotation="0 0 90"
-        radius="0.05"
-        height="0.7"
-        color="#3d2010">
-      </a-cylinder>
-      <a-cylinder
-        position="-3 0.05 -2"
-        rotation="0 60 90"
-        radius="0.05"
-        height="0.7"
-        color="#3d2010">
-      </a-cylinder>
-
-      <a-cone
-        position="-3 0.3 -2"
-        radius-bottom="0.12"
-        radius-top="0.01"
-        height="0.4"
-        color="#ff6820"
-        material="shader: flat">
-        <a-animation
-          attribute="scale"
-          from="1 1 1"
-          to="0.85 1.2 0.85"
-          dur="500"
-          direction="alternate"
-          repeat="indefinite"
-          easing="easeInOutSine">
-        </a-animation>
-      </a-cone>
-
-      <a-light
-        type="point"
-        color="#ff8030"
-        intensity="1.2"
-        distance="6"
-        position="-3 0.5 -2">
-      </a-light>
-
-     
-      <a-light type="directional" color="#8899cc" intensity="0.4" position="-5 10 -5"></a-light>
-
-      <a-light type="ambient" color="#111122" intensity="1"></a-light>
-
- 
-
-      <a-sphere position="10 15 -30"  radius="0.08" color="#ffffff" material="shader:flat"></a-sphere>
-      <a-sphere position="-15 20 -40" radius="0.1"  color="#ffffff" material="shader:flat"></a-sphere>
-      <a-sphere position="5 25 -50"   radius="0.07" color="#aac0ff" material="shader:flat"></a-sphere>
-      <a-sphere position="-8 18 -35"  radius="0.09" color="#ffffff" material="shader:flat"></a-sphere>
-      <a-sphere position="20 22 -45"  radius="0.06" color="#ffdda8" material="shader:flat"></a-sphere>
-      <a-sphere position="-20 28 -50" radius="0.1"  color="#ffffff" material="shader:flat"></a-sphere>
-      <a-sphere position="12 30 -55"  radius="0.08" color="#ffffff" material="shader:flat"></a-sphere>
-      <a-sphere position="-5 35 -60"  radius="0.09" color="#aac0ff" material="shader:flat"></a-sphere>
-      <a-sphere position="25 18 -40"  radius="0.07" color="#ffffff" material="shader:flat"></a-sphere>
-      <a-sphere position="-25 22 -45" radius="0.08" color="#ffdda8" material="shader:flat"></a-sphere>
+      <a-sphere position="22 -9 -28" radius="11" scale="1.6 0.42 1.3"
+        color="#0f180a" material="shader:standard; roughness:1">
+      </a-sphere>
 
    
+
+      <a-cylinder position="0 1.8 -4" rotation="30 0 0" radius="0.15" height="2" color="#8a7a60"></a-cylinder>
+      <a-cylinder position="0 0.8 -4" radius="0.08" height="1.2" color="#6a5a40"></a-cylinder>
+      <a-cylinder position="0 0.2 -4" radius="0.3" height="0.08" color="#5a4a30"></a-cylinder>
+
+   
+
+      <a-torus position="3 1.2 -3" rotation="0 0 0" radius="0.6" radius-tubular="0.02" color="#c0a060">
+        <a-animation attribute="rotation" from="0 0 0" to="0 360 0" dur="20000" repeat="indefinite" easing="linear"></a-animation>
+      </a-torus>
+      <a-torus position="3 1.2 -3" rotation="90 0 0"  radius="0.58" radius-tubular="0.02" color="#b09050"></a-torus>
+      <a-torus position="3 1.2 -3" rotation="90 0 45" radius="0.56" radius-tubular="0.02" color="#a08040"></a-torus>
+      <a-sphere position="3 1.2 -3" radius="0.12" color="#2a4a6e"></a-sphere>
+      <a-cylinder position="3 0.5 -3" radius="0.06" height="0.8" color="#8a7a60"></a-cylinder>
+
+
+      <a-cylinder position="0 0.6 -8" radius="3" height="1.2" color="#3a3228"></a-cylinder>
+      <a-sphere position="0 1.8 -8" radius="3" phi-start="0" phi-length="180" color="#2c2820"></a-sphere>
+
+      <a-box position="0 0.7 -5.05" width="1" height="1.4" depth="0.1" color="#0a0808"></a-box>
+
+
+
+      <a-cylinder position="-3 0.05 -2" rotation="0 0 90"  radius="0.05" height="0.7" color="#3d2010"></a-cylinder>
+      <a-cylinder position="-3 0.05 -2" rotation="0 60 90" radius="0.05" height="0.7" color="#3d2010"></a-cylinder>
+
+      <a-cone position="-3 0.3 -2" radius-bottom="0.12" radius-top="0.01" height="0.4" color="#ff6820" material="shader:flat">
+        <a-animation attribute="scale" from="1 1 1" to="0.85 1.2 0.85" dur="500" direction="alternate" repeat="indefinite" easing="easeInOutSine"></a-animation>
+      </a-cone>
+      <a-cone position="-3 0.28 -2" radius-bottom="0.08" radius-top="0.01" height="0.3" color="#ffb020" material="shader:flat">
+        <a-animation attribute="scale" from="1 1 1" to="0.9 1.3 0.9" dur="380" direction="alternate" repeat="indefinite" easing="easeInOutSine"></a-animation>
+      </a-cone>
+
+      <a-light type="point" color="#ff8030" intensity="1.2" distance="6" position="-3 0.5 -2">
+        <a-animation attribute="intensity" from="1.2" to="0.7" dur="600" direction="alternate" repeat="indefinite" easing="easeInOutSine"></a-animation>
+      </a-light>
+
+
+
+      <a-cylinder position="-7 1.5 -4" radius="0.1" height="3.5" color="#2a2018"></a-cylinder>
+      <a-cylinder position="-6.5 2.8 -4" rotation="0 0 40" radius="0.05" height="1.4" color="#2a2018"></a-cylinder>
+      <a-cylinder position="-7.5 2.4 -4" rotation="0 0 -35" radius="0.05" height="1.2" color="#2a2018"></a-cylinder>
+      <a-cylinder position="-7 3.2 -4" rotation="0 30 25" radius="0.04" height="1.0" color="#2a2018"></a-cylinder>
+
+
+
+      <a-sphere position="2 0.1 -1.5"  radius="0.22" scale="1.2 0.7 1.0" color="#3a3228"></a-sphere>
+      <a-sphere position="2.4 0.08 -1" radius="0.15" scale="1.0 0.6 0.9" color="#302820"></a-sphere>
+      <a-sphere position="-4.5 0.1 -3" radius="0.2"  scale="1.1 0.65 1.0" color="#3a3228"></a-sphere>
+
+
+      <a-light type="directional" color="#aabbdd" intensity="0.5" position="-18 22 -60"></a-light>
+
+      <a-light type="ambient" color="#0a0820" intensity="1.2"></a-light>
+
+      <a-light type="point" color="#3050a0" intensity="0.4" distance="10" position="0 4 -8"></a-light>
+
+      <a-sphere position="10 15 -80"   radius="0.15" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="-15 20 -90"  radius="0.18" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="5 25 -100"   radius="0.12" color="#aac0ff" material="shader:flat"></a-sphere>
+      <a-sphere position="-8 18 -85"   radius="0.16" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="20 22 -95"   radius="0.11" color="#ffdda8" material="shader:flat"></a-sphere>
+      <a-sphere position="-20 28 -100" radius="0.18" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="12 30 -95"   radius="0.14" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="-5 35 -110"  radius="0.16" color="#aac0ff" material="shader:flat"></a-sphere>
+      <a-sphere position="25 18 -90"   radius="0.13" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="-25 22 -95"  radius="0.15" color="#ffdda8" material="shader:flat"></a-sphere>
+      <a-sphere position="35 28 -100"  radius="0.12" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="-35 32 -105" radius="0.14" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="0 40 -110"   radius="0.18" color="#aac0ff" material="shader:flat"></a-sphere>
+      <a-sphere position="18 38 -105"  radius="0.13" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="-18 34 -100" radius="0.15" color="#ffdda8" material="shader:flat"></a-sphere>
+      <a-sphere position="42 25 -95"   radius="0.12" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="-42 20 -90"  radius="0.14" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="30 42 -115"  radius="0.16" color="#aac0ff" material="shader:flat"></a-sphere>
+      <a-sphere position="-30 38 -110" radius="0.13" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="8 45 -120"   radius="0.18" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="-12 42 -115" radius="0.14" color="#ffdda8" material="shader:flat"></a-sphere>
+      <a-sphere position="50 30 -100"  radius="0.11" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="-50 26 -95"  radius="0.13" color="#aac0ff" material="shader:flat"></a-sphere>
+      <a-sphere position="22 48 -120"  radius="0.15" color="#ffffff" material="shader:flat"></a-sphere>
+      <a-sphere position="-22 44 -118" radius="0.12" color="#ffffff" material="shader:flat"></a-sphere>
+
+ 
 
       <a-entity position="0 1.6 4">
         <a-camera wasd-controls look-controls></a-camera>
